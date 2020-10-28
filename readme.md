@@ -33,7 +33,8 @@ To stop using this library, delete that line from your sketch.
   Helper classes
 --------------------------------------------------------------------------------
 
-##TimeClk
+TimeClk
+=======
 NTP synchronized clock with 1s resolution. The NTP client ist taken from Francesco Potortì
 	 
 To start a TimeClk instance:
@@ -60,7 +61,8 @@ Convert a daytime like 0800 to a unix time (seconds since 1970...)
 	static unsigned long daytime2unixtime(unsigned long i_daytime, unsigned long _now);
 	
 	
-##uTimer
+uTimer
+=======
 Timers...  this is raw experimental stuff.. so look in the header for documentation...
 
 
@@ -84,7 +86,8 @@ Timers...  this is raw experimental stuff.. so look in the header for documentat
 	}
 	
 
-##Debounce
+Debounce
+=======
 Digital inputs like switches need to be filtered to avoid spurious signals, and bouncing inputs.
 An instance of _Debounce_ can be used to realize this simple filter:
 
@@ -94,7 +97,8 @@ An instance of _Debounce_ can be used to realize this simple filter:
 	int filtered_in =  fltr.get( digitalRead(inputPin) ); // read and filter dig-in
 	
 
-##DebouncedInput
+DebouncedInput
+=======
 Like Debounce but specialized for digital input:
 	
 	DebouncedInput    key( inputPin , 50);   //  50ms debounce delay 
@@ -102,7 +106,8 @@ Like Debounce but specialized for digital input:
 	int keyState =    key.read();  // filtered input-level from inputPin
 	
 
-##PushButton
+PushButton
+=======
 _PushButton_ is a debounced input, that delivers interpreted input _events_:
 * CLICK	    // BUtton click DN - UP
 * UP		// Button was released
@@ -120,7 +125,8 @@ _PushButton_ is a debounced input, that delivers interpreted input _events_:
 			)
 
 
-## BlinkSignal
+BlinkSignal
+=======
 The first thing you get up running on a new board is often the Blink example. Like "hello, world" without Display or serial interface.
 So signalling by using a LED and blink patterns is a useful thing.
 
@@ -145,7 +151,8 @@ _BlinkSignal_ is a class for signalling status/events by various blink patterns.
 	[...]
 	
 
-## MorseCoder
+MorseCoder
+=======
 _MorseCoder_ is a specialized BlinkSignal. ...obviously for Morse code.
 
 	MorseCoder(unsigned i_ticklen= 250;
