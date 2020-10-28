@@ -1,0 +1,50 @@
+#######################################
+# Syntax Coloring Map For Test
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+DebouncedInput	KEYWORD1
+PushButton		KEYWORD1
+TimeClk			KEYWORD1
+
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+read			KEYWORD2
+getEvent		KEYWORD2
+
+getTimeString	KEYWORD2
+getTimeStringS	KEYWORD2
+utc2local		KEYWORD2
+begin			KEYWORD2
+
+
+
+OPEN_EEPROM		KEYWORD2
+SEEK_EEPROM		KEYWORD2
+GET_EEPROM 		KEYWORD2
+PUT_EEPROM		KEYWORD2
+COMMIT_EEPROM	KEYWORD2
+CLOSE_EEPROM	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+IDLE			LITERAL1
+CLICK			LITERAL1
+UP				LITERAL1
+DN				LITERAL1
+DN_LONG1		LITERAL1
+DN_LONG2		LITERAL1
+DBLCLICK		LITERAL1
+TRIPLECLICK		LITERAL1
+QUADCLICK		LITERAL1
+EEPROM_SIZE		LITERAL1
+
