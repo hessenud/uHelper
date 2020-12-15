@@ -1,0 +1,25 @@
+{
+	"name": "uHelper",
+	"description": "Helpful components for Arduino projects Library for ESP8266 and ESP32",
+	"keywords": "debounce,key,input,morsecode,timer,blink",
+	"authors": {
+		"name": "Udo Hessenauer",
+		"maintainer": true
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/hessenud/uHelper.git"
+	},
+	"version": "0.2",
+	"license": "GPL-3.0",
+	"frameworks": "arduino",
+	"platforms": [
+		"espressif8266"
+	],
+	"dependencies": [
+		{
+			"name": "WifiUDP",
+			"platforms": "espressif8266"
+		}
+	]
+}
