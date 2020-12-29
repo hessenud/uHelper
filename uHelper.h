@@ -5,6 +5,25 @@
 #include <WiFiUDP.h>
 
 
+
+
+
+
+//--------------------------------------------
+//--- Aux Helper  ------------------------
+//--------------------------------------------
+
+/**
+ * @brief make a member (const) readable
+ */
+#define attr_reader( __t, __v ) const __t & __v=m_##__v
+
+const char* storeString( String istr );
+
+#ifndef DIM
+# define DIM(x) (sizeof(x)/sizeof(x[0]))
+#endif
+
 //--------------------------------------------
 //--- Time Helper  ------------------------
 //--------------------------------------------
