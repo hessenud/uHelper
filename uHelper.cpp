@@ -13,6 +13,17 @@ const char* storeString( String istr )
     strncpy(buf, istr.c_str(), len);
     return const_cast<const char*>(buf);
 }
+
+
+const char* replaceString( char** io_buf, String istr )
+{
+    unsigned len = istr.length()+1;
+    char* buf = (char*) malloc(len);
+    strncpy(buf, istr.c_str(), len);
+    if ( *io_buf )  free(*io_buf);
+    *io_buf= buf;
+    return const_cast<const char*>(buf);
+}
 //-------------------------------------------------------------------
 //-- TimeClk -------------------------------------------------
 //-------------------------------------------------------------------
