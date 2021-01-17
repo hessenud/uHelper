@@ -33,6 +33,7 @@ unsigned long TimeClk::daytime2unixtime(unsigned long i_daytime, unsigned long _
     return dayoffset +  i_daytime;
 }
 
+
 unsigned long TimeClk::timeStr2Value(  const char* i_ts)
 {
     /* timestr    hh:mm  h:mm  hh:mm:ss
@@ -196,21 +197,21 @@ const char* TimeClk::getTimeStringDays( unsigned long theTime )
 //-------------------------------------------------------------------
 //-- IO - Key input -------------------------------------------------
 //-------------------------------------------------------------------
+const char* evt2str[] ={
+        "IDLE",
+        "UP",
+        "PRESSED",  // DN - UP
+        "DN",
+        "DN_LONG1",
+        "DN_LONG2",
+        "DBLCLICK",
+        "TRIPLECLICK",
+        "QUADCLICK",
+        "---"
+};
 
 int PushButton::getEvent(){
 
-    static const char* evt2str[] ={
-            "IDLE",
-            "UP",
-            "PRESSED",  // DN - UP
-            "DN",
-            "DN_LONG1",
-            "DN_LONG2",
-            "DBLCLICK",
-            "TRIPLECLICK",
-            "QUADCLICK",
-            "---"
-    };
 
     int event = IDLE; //
     int input = read();
@@ -581,44 +582,87 @@ bool MorseCoder::tick()
 #endif
 
 
+
+void uTimer::rearm(unsigned long i_interval ) {
+     if ( i_interval ) {
+         m_cfg.interval = i_interval;
+     }
+
+     if ( m_cfg.interval) {
+         m_cfg.sw_time +=  m_cfg.interval;
+     } else {
+         //
+         if ( m_cfg.everyday ) {
+             m_cfg.sw_time += 1 Day;
+         } else {
+             ///@todo weekday ahead rearming
+             // unsigned weekday = 0;
+         }
+     }
+     m_cfg.armed = true;
+
+}
+
+
 bool uTimer::check(unsigned long _time)
 {
-    //Serial.printf("check %p:  time %s(%lu)  vs: %s(%lu) %s\n", this, String(TimeClk::getTimeStringS(m_swTime)).c_str(),m_swTime, String(TimeClk::getTimeStringS(_time)).c_str(),_time, m_hot ? "ARMED" : "IDLE" );
-    if(m_swTime >= _time)
+    if ( m_cfg.sw_time >= _time )
     {
-        if ( m_hot  ) // hot an time reached
+        if ( m_cfg.armed   ) // hot an time reached
         {
             trigger();
             return true;
         }
     } else {
-        if (m_interval) rearm( 0 );
+        if (m_cfg.repeat) rearm();
     }
     return false;
 }
 
 
-void uTimer::append_to(uTimer* i_list)
+void uTimerList::append(uTimer* i_tmr)
 {
-    uTimer* wp= i_list;
-    if (wp){
-        while(  wp->next()) wp = wp->next();
-        wp->m_next = this;
-    }
+    uTimer** wp= &m_head;
+    while( (*wp) ) (*wp) = (*wp)->m_next;
+    (*wp) = i_tmr;
 }
 
-void uTimer::append(uTimer* i_tmr)
+
+void uTimer::append_to(uTimerList* i_list)
 {
-    uTimer* wp= this;
-    while(  wp->m_next)  wp = wp->next();
-    wp->m_next = i_tmr;
+    uTimer** wp= &i_list->m_head;
+
+    while( (*wp)->m_next ) (*wp) = (*wp)->m_next;
+    (*wp) = this;
 }
+
+
+
+void uTimer::remove(uTimerList* i_list)
+{
+    uTimer** wp= &i_list->m_head;
+    while( (*wp) != this ) {
+        wp = &(*wp)->m_next;
+    }
+    (*wp) = this->m_next;
+}
+
 
 
 void uTimer::trigger()
 {
-    if (m_channel) *m_channel = m_switchmode;
-    if (m_channel_cb) m_channel_cb( m_switchmode );
-    m_hot = false;
+    if (m_channel_cb) m_channel_cb( m_cfg.switchmode );
+    m_cfg.armed = false;
 }
 
+int  uTimer::dump(char* o_wp, const uTimer& i_tmr ){
+    char* wp = o_wp;
+    wp += sprintf_P(wp,PSTR("%8s %c%c%c %lu\n")
+            , TimeClk::getTimeString( i_tmr.m_cfg.sw_time )
+                , i_tmr.m_cfg.armed ? '*' :'o'
+                        , i_tmr.m_cfg.repeat ? 'R' :'s'
+                                , i_tmr.m_cfg.everyday ? 'd' :' '
+                                        , i_tmr.m_cfg.interval
+    );
+    return wp - o_wp;
+}

@@ -21,6 +21,8 @@
 const char* storeString( String istr );
 const char* replaceString( char** io_buf, String istr );
 
+ #define Tstr( __s )   String( __s ).c_str()
+
 #ifndef DIM
 # define DIM(x) (sizeof(x)/sizeof(x[0]))
 #endif
@@ -33,44 +35,107 @@ const char* replaceString( char** io_buf, String istr );
 #define Hrs *(60 Min)
 #define Day *(24 Hrs)
 
+typedef std::function<void(void)> uDelegate;
 
-#define mkDelegate( __obj, __meth )  [](){ (__obj)->__meth(); }
+#define mkDelegate( __obj, __meth )  [&](){ (__obj)->__meth(); }
 
 class uTimer; // forward
-class uTimer {
-    unsigned long m_swTime;     ///< switch time in minutes
-    unsigned long m_interval;     ///< switch time in minutes
-    bool          m_switchmode; ///< true = on false = off
-    int*          m_channel;    ///< switch number
-    void          (*m_channel_cb)(bool i_switchmode); ///<  call a delegate if any
-    bool          m_hot;        //< time != swTime; hot<-true | when swTime is reached timer is executed and hot <- false
 
-    uTimer*       m_next;
+
+typedef std::function<void(bool)> timer_cb_t;
+
+class uTimerCfg {
 public:
-    uTimer(unsigned long i_swTime, unsigned long i_interval=0, bool i_switchmode=true, int* i_channel =0, void (*i_channel_cb)(bool)=0):
-        m_swTime(i_swTime), m_interval(i_interval), m_switchmode(i_switchmode),m_channel(i_channel),m_channel_cb(i_channel_cb),m_hot(true),m_next(0){}
+        unsigned long sw_time;
+        unsigned long interval;
+        bool mo:1;
+        bool tu:1;
+        bool we:1;
+        bool th:1;
+        bool fr:1;
+        bool sa:1;
+        bool su:1;
+        bool everyday:1;
+        bool repeat:1;
+        bool armed:1;
+        bool switchmode; ///< true = on false = off
 
-    unsigned long getSwTime() { return m_swTime; }
-    bool          hot() { return m_hot; }
+        uTimerCfg(){
+            sw_time=0;
+            interval=0;
+            we=false;
+            fr=false;sa=false;
+            su=false;
+            everyday=false;
+            repeat=false;
+            armed=false;
+            switchmode=false; ///< true = on false = off
+        }
+
+
+
+        uTimerCfg& operator=(const uTimerCfg& other ){
+            sw_time = other.sw_time;
+            interval = other.interval;
+            we = other.we;
+            fr = other.fr;
+            sa = other.sa;
+            su = other.su;
+            everyday = other.everyday;
+            repeat = other.repeat;
+            armed = other.armed;
+            switchmode = other.switchmode; ///< true = on false = off
+            return *this;
+        }
+};
+
+class uTimer;
+class uTimerList {
+    uTimer*       m_head;
+
+public:
+    uTimerList():m_head(0){}
+    uTimer* head() {return m_head;}
+    void          append(uTimer* i_tmt);
+    friend class uTimer;
+};
+
+class uTimer {
+    uTimerCfg  m_cfg;
+    timer_cb_t m_channel_cb; ///<  call a delegate if any
+
+    uTimer*    m_next;
+public:
+    uTimer(): m_channel_cb(0),m_next(0){}
+
+    uTimer(unsigned long i_swTime, unsigned long i_interval=0, bool i_switchmode=true, bool i_armed=true, timer_cb_t i_channel_cb=0):
+     m_channel_cb(i_channel_cb),m_next(0){
+        m_cfg.switchmode = i_switchmode;
+        m_cfg.repeat     = !(i_interval == 0);
+        m_cfg.sw_time    = i_swTime;
+        m_cfg.interval   = i_interval;
+        m_cfg.armed      = i_armed;
+    }
+
+    uTimer( const uTimerCfg& i_cfg, timer_cb_t i_channel_cb=0):m_cfg(i_cfg),
+            m_channel_cb(i_channel_cb),m_next(0){
+    }
+
+    unsigned long getSwTime() { return m_cfg.sw_time; }
+    bool          hot() { return m_cfg.armed; }
     uTimer*       next(){ return m_next; }
     void          trigger();
-    void          append(uTimer* i_tmt);
-    void          append_to(uTimer* i_list);
+    void          append_to(uTimerList* i_list);
+    void          remove(uTimerList* i_list);
     bool          check(unsigned long _time);
 
     /** re-arm the timer by adding an interval to last trigger time
      *  the interval is applied until next trigger lies in the future,
      *  the standard interval is 0s = no repetition   // for repetition 1DAY == 24*3600s
      *
-     *  @param i_interval  if nonzero advance trigger by i_interval seconds else use m_interval
+     *  @param i_interval  if nonzero advance trigger by i_interval seconds else use m_cfg.interval
      */
-    void rearm(unsigned long i_interval=1 Day) {
-        m_hot = true;
-        if ( i_interval ) {
-            m_interval = i_interval;
-        }
-        m_swTime +=  m_interval;
-    }
+    void rearm(unsigned long i_interval=0);
 
     /**
      * set a uTimer
@@ -80,26 +145,36 @@ public:
      * @param i_channel     e.g. PIN number
      * @param i_channel_cb  callback function on trigger
      */
-    void set(unsigned long i_swTime, unsigned long i_interval=0, bool i_switchmode=true, int* i_channel =0, void (*i_channel_cb)(bool)=0)
+    void set(unsigned long i_swTime, unsigned long i_interval=0, bool i_switchmode=true, timer_cb_t i_channel_cb=0)
     {
-        m_swTime = i_swTime;
-        m_interval = i_interval;
-        m_switchmode = i_switchmode;
-        m_channel = i_channel;
+        m_cfg.sw_time = i_swTime;
+        m_cfg.interval = i_interval;
+        m_cfg.repeat     = !(i_interval == 0);
+        m_cfg.switchmode = i_switchmode;
+        if ( i_channel_cb) m_channel_cb = i_channel_cb;
+        m_cfg.armed = true;
+    }
+
+    void  set( const uTimerCfg& i_cfg, timer_cb_t i_channel_cb )
+    {
         m_channel_cb = i_channel_cb;
-        m_hot = true;
+        m_cfg = i_cfg; ///< true = on false = off
     }
 
 
     ///  disarm timer
-    void disarm() { m_hot = false; }
+    void disarm() { m_cfg.armed = false; }
 
     /// @return true if timer is repetitive
-    bool is_repetitive() { return (m_swTime!=0) && (m_interval!=0); }
+    bool is_repetitive() { return (m_cfg.sw_time!=0) && (m_cfg.interval!=0); }
 
-    /// @return true if timer is repetitive
-    bool is_active() { return m_swTime!=0; }
+    /// @return true if timer is active
+    bool is_active() { return m_cfg.armed; }
 
+    static int  dump(char* o_wp, const uTimer& i_tmr );
+
+
+    friend class uTimerList;
 };
 
 
@@ -160,6 +235,9 @@ public:
      */
     static unsigned long daytime2unixtime( unsigned long i_daytime, unsigned long _now);
 
+    static unsigned long unixtime2daytime( unsigned long _now) {
+        return _now%(1 Day);
+    }
     /**
      * @return timestring as numeric value in seconds
      */
