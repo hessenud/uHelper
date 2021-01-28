@@ -46,6 +46,7 @@ typedef std::function<void(bool)> timer_cb_t;
 
 class uTimerCfg {
 public:
+
         unsigned long sw_time;
         unsigned long interval;
         bool mo:1;
@@ -55,12 +56,14 @@ public:
         bool fr:1;
         bool sa:1;
         bool su:1;
+        bool valid:1;
         bool everyday:1;
         bool repeat:1;
         bool armed:1;
         bool switchmode; ///< true = on false = off
 
         uTimerCfg(){
+            valid=false;
             sw_time=0;
             interval=0;
             we=false;
@@ -75,6 +78,7 @@ public:
 
 
         uTimerCfg& operator=(const uTimerCfg& other ){
+            valid = other.valid;
             sw_time = other.sw_time;
             interval = other.interval;
             we = other.we;
@@ -110,6 +114,7 @@ public:
 
     uTimer(unsigned long i_swTime, unsigned long i_interval=0, bool i_switchmode=true, bool i_armed=true, timer_cb_t i_channel_cb=0):
      m_channel_cb(i_channel_cb),m_next(0){
+        m_cfg.valid       = true;
         m_cfg.switchmode = i_switchmode;
         m_cfg.repeat     = !(i_interval == 0);
         m_cfg.sw_time    = i_swTime;
@@ -129,6 +134,7 @@ public:
     void          remove(uTimerList* i_list);
     bool          check(unsigned long _time);
 
+    void          invalidate() { m_cfg.valid = false; }
     /** re-arm the timer by adding an interval to last trigger time
      *  the interval is applied until next trigger lies in the future,
      *  the standard interval is 0s = no repetition   // for repetition 1DAY == 24*3600s

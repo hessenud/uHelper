@@ -657,12 +657,14 @@ void uTimer::trigger()
 
 int  uTimer::dump(char* o_wp, const uTimer& i_tmr ){
     char* wp = o_wp;
-    wp += sprintf_P(wp,PSTR("%8s %c%c%c %lu\n")
-            , TimeClk::getTimeString( i_tmr.m_cfg.sw_time )
+    if (i_tmr.m_cfg.valid ) {
+        wp += sprintf_P(wp,PSTR("%8s %c%c%c %lu\n")
+                , TimeClk::getTimeString( i_tmr.m_cfg.sw_time )
                 , i_tmr.m_cfg.armed ? '*' :'o'
                         , i_tmr.m_cfg.repeat ? 'R' :'s'
                                 , i_tmr.m_cfg.everyday ? 'd' :' '
                                         , i_tmr.m_cfg.interval
-    );
+        );
+    }
     return wp - o_wp;
 }
