@@ -1,7 +1,7 @@
 #ifndef _uHELPER_H_
 #define _uHELPER_H_
 #include <Arduino.h>
-#include "pgmspace.h"
+#include <pgmspace.h>
 #include <WiFiUDP.h>
 
 
@@ -35,8 +35,6 @@ const char* replaceString( char** io_buf, String istr );
 #define Hrs *(60 Min)
 #define Day *(24 Hrs)
 
-typedef std::function<void(void)> uDelegate;
-
 #define mkDelegate( __obj, __meth )  [&](){ (__obj)->__meth(); }
 
 class uTimer; // forward
@@ -63,17 +61,27 @@ public:
         bool switchmode; ///< true = on false = off
 
         uTimerCfg(){
-            valid=false;
-            sw_time=0;
-            interval=0;
-            we=false;
-            fr=false;sa=false;
-            su=false;
-            everyday=false;
-            repeat=false;
-            armed=false;
-            switchmode=false; ///< true = on false = off
-        }
+                valid=false;
+                sw_time=0;
+                interval=0;
+                we=false;
+                fr=false;sa=false;
+                su=false;
+                everyday=false;
+                repeat=false;
+                armed=false;
+                switchmode=false; ///< true = on false = off
+            }
+
+        uTimerCfg(unsigned long i_swTime, unsigned long i_interval, bool i_switchmode, bool i_armed, bool i_daily ) {
+               valid       = true;
+               switchmode = i_switchmode;
+               repeat     = !(i_interval == 0);
+               sw_time    = i_swTime;
+               interval   = i_interval;
+               armed      = i_armed;
+               everyday   = i_daily;
+           }
 
 
 
