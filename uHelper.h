@@ -6,6 +6,7 @@
 
 
 
+#define DBG_ASSERT( __a__ )   if ( !(__a__) )  DEBUG_PRINT(" assertion failed: " #__a__ "  !!\n")
 
 
 
@@ -203,13 +204,14 @@ public:
  * TimeClk   with NTP Client
  ********************************************************************/
 class TimeClk {
-    int  m_tz;
-    unsigned int  m_localPort;     //<  local port to listen for UDP packets
-    unsigned long m_localTime;	 ///< local unix-time  (seconds passed since...)
-    bool			m_dst;			 ///< true = daylight saving time
-    unsigned 		m_ltime_ms;		 ///< local time in milliseconds
-    unsigned long m_ntpTime;		 ///< last ntp time
-    int 			m_tickLen;		 ///< ticklen of ntp time (1s) in local milliseconds (clock discipline)
+    const char*     m_ntpServer;    ///< NTP server
+    int             m_tz;           ///< Timezone in 100th hours
+    unsigned int    m_localPort;    ///<  local port to listen for UDP packets
+    unsigned long   m_localTime;    ///< local unix-time  (seconds passed since...)
+    bool	        m_dst;			///< true = daylight saving time
+    unsigned 		m_ltime_ms;		///< local time in milliseconds
+    unsigned long   m_ntpTime;		///< last ntp time
+    int 			m_tickLen;		///< ticklen of ntp time (1s) in local milliseconds (clock discipline)
 
     // A UDP instance to let us send and receive packets over UDP
     WiFiUDP m_udp;
@@ -228,11 +230,14 @@ class TimeClk {
 public:
 
 
-    TimeClk( ):m_tz(0),m_localPort(0),m_ltime_ms(0),m_ntpTime(0), m_tickLen(1000){
+    TimeClk( const char* i_ntpServer =  "pool.ntp.org" )
+        :m_ntpServer(i_ntpServer), m_tz(0),m_localPort(0),m_ltime_ms(0),m_ntpTime(0), m_tickLen(1000) {
     }
 
-    void begin(int i_tz , unsigned  i_locPort = 2390) {
+
+    void begin(int i_tz , const char* i_ntpServer =  "pool.ntp.org", unsigned  i_locPort = 2390) {
         m_tz = i_tz;
+        m_ntpServer = i_ntpServer;
         m_localPort = i_locPort;
         m_udp.begin(m_localPort);
     }

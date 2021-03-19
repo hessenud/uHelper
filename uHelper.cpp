@@ -74,8 +74,7 @@ unsigned long TimeClk::ntpUnixTime()
 {
     static int udpInited = m_udp.begin(123); // open socket on arbitrary port
 
-    //const char timeServer[] = "pool.ntp.org";  // NTP server
-    const char m_ntpServer[] = "fritz.box";  // NTP server
+
 
     // Only the first four bytes of an outgoing NTP packet need to be set
     // appropriately, the rest can be whatever.
