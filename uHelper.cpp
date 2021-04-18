@@ -164,6 +164,24 @@ unsigned long TimeClk::read()
 }
 
 
+const char* TimeClk::weekdays2str[] = {"Mo","Tu","We","Th","Fr","Sa","So" };
+
+int TimeClk::day_of_week(unsigned long i_tm) {
+    return ( (i_tm/(1 Day)) + 3) % 7;
+}
+
+
+const char* TimeClk::getDateString( unsigned long theTime )
+{
+    static char timestr[12];
+    unsigned days = (theTime  % 86400L);
+    // Day 0 is 1.1.1970  Do
+    // print the hour, minute and second:
+    sprintf_P( timestr, PSTR("%2s:%5lu"), weekdays2str[day_of_week(theTime)], days);
+
+    return timestr;
+}
+
 const char* TimeClk::getTimeString( unsigned long theTime )
 {
     static char timestr[9];

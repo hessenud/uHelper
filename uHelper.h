@@ -228,7 +228,7 @@ class TimeClk {
     }
 
 public:
-
+    static const char* weekdays2str[];
 
     TimeClk( const char* i_ntpServer =  "pool.ntp.org" )
         :m_ntpServer(i_ntpServer), m_tz(0),m_localPort(0),m_ltime_ms(0),m_ntpTime(0), m_tickLen(1000) {
@@ -244,6 +244,9 @@ public:
 
     unsigned long read();
 
+
+    static int day_of_week(unsigned long i_tm);
+    static const char* getDateString( unsigned long theTime );
     static const char* getTimeString( unsigned long theTime );
     static const char* getTimeStringS( unsigned long theTime );
     static const char* getTimeStringDays( unsigned long theTime );
