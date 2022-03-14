@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <pgmspace.h>
 #include <WiFiUDP.h>
-
+#include <TimeLib.h>
 
 
 #define DBG_ASSERT( __a__ )   if ( !(__a__) )  DEBUG_PRINT(" assertion failed: " #__a__ "  !!\n")
@@ -32,9 +32,9 @@ const char* replaceString( char** io_buf, String istr );
 //--- Time Helper  ------------------------
 //--------------------------------------------
 
-#define Min *60
-#define Hrs *(60 Min)
-#define Day *(24 Hrs)
+#define MIN *60
+#define HOUR *(60 MIN)
+#define DAY *(24 HOUR)
 
 #define mkDelegate( __obj, __meth )  [&](){ (__obj)->__meth(); }
 
@@ -65,8 +65,12 @@ public:
                 valid=false;
                 sw_time=0;
                 interval=0;
+                mo=false;
+                tu=false;
                 we=false;
-                fr=false;sa=false;
+                th=false;
+                fr=false;
+                sa=false;
                 su=false;
                 everyday=false;
                 repeat=false;
@@ -90,7 +94,10 @@ public:
             valid = other.valid;
             sw_time = other.sw_time;
             interval = other.interval;
+            mo = other.mo;
+            tu = other.tu;
             we = other.we;
+            th = other.th;
             fr = other.fr;
             sa = other.sa;
             su = other.su;
@@ -242,6 +249,10 @@ public:
         m_udp.begin(m_localPort);
     }
 
+    void decompose(unsigned long int unixtime,
+            int &oYear, int &oMonth, int &oDay,
+            int &oHour, int &oMinute, int &oSecond);
+
     unsigned long read();
 
 
@@ -258,9 +269,12 @@ public:
     static unsigned long daytime2unixtime( unsigned long i_daytime, unsigned long _now);
 
     static unsigned long unixtime2daytime( unsigned long _now) {
-        return _now%(1 Day);
+        return _now%(1 DAY);
     }
+
+
     /**
+     *
      * @return timestring as numeric value in seconds
      */
     static unsigned long timeStr2Value(  const char* i_ts);

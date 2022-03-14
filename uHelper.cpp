@@ -29,7 +29,7 @@ const char* replaceString( char** io_buf, String istr )
 //-------------------------------------------------------------------
 
 unsigned long TimeClk::daytime2unixtime(unsigned long i_daytime, unsigned long _now) {
-    unsigned long dayoffset = _now - (_now%(1 Day));
+    unsigned long dayoffset = _now - (_now%(1 DAY));
     return dayoffset +  i_daytime;
 }
 
@@ -167,19 +167,66 @@ unsigned long TimeClk::read()
 const char* TimeClk::weekdays2str[] = {"Mo","Tu","We","Th","Fr","Sa","So" };
 
 int TimeClk::day_of_week(unsigned long i_tm) {
-    return ( (i_tm/(1 Day)) + 3) % 7;
+    return ( (i_tm/(1 DAY)) + 3) % 7;
 }
 
+void TimeClk::decompose(unsigned long int unixtime,
+                           int &oYear, int &oMonth, int &oDay,
+                           int &oHour, int &oMinute, int &oSecond)
+{
+    const unsigned long int SEKUNDEN_PRO_TAG   =  86400ul; /*  24* 60 * 60 */
+    const unsigned long int TAGE_IM_GEMEINJAHR =    365ul; /* kein Schaltjahr */
+    const unsigned long int TAGE_IN_4_JAHREN   =   1461ul; /*   4*365 +   1 */
+    const unsigned long int TAGE_IN_100_JAHREN =  36524ul; /* 100*365 +  25 - 1 */
+    const unsigned long int TAGE_IN_400_JAHREN = 146097ul; /* 400*365 + 100 - 4 + 1 */
+    const unsigned long int TAGN_AD_1970_01_01 = 719468ul; /* Tagnummer bezogen auf den 1. Maerz des Jahres "Null" */
+
+    unsigned long int TagN = TAGN_AD_1970_01_01 + unixtime/SEKUNDEN_PRO_TAG;
+    unsigned long int Sekunden_seit_Mitternacht = unixtime%SEKUNDEN_PRO_TAG;
+    unsigned long int temp;
+
+    /* Schaltjahrregel des Gregorianischen Kalenders:
+       Jedes durch 100 teilbare Jahr ist kein Schaltjahr, es sei denn, es ist durch 400 teilbar. */
+    temp = 4 * (TagN + TAGE_IN_100_JAHREN + 1) / TAGE_IN_400_JAHREN - 1;
+    oYear = 100 * temp;
+    TagN -= TAGE_IN_100_JAHREN * temp + temp / 4;
+
+    /* Schaltjahrregel des Julianischen Kalenders:
+       Jedes durch 4 teilbare Jahr ist ein Schaltjahr. */
+    temp = 4 * (TagN + TAGE_IM_GEMEINJAHR + 1) / TAGE_IN_4_JAHREN - 1;
+    oYear += temp;
+    TagN -= TAGE_IM_GEMEINJAHR * temp + temp / 4;
+
+    /* TagN enthaelt jetzt nur noch die Tage des errechneten Jahres bezogen auf den 1. Maerz. */
+    oMonth = (5 * TagN + 2) / 153;
+    oDay = TagN - (oMonth * 153 + 2) / 5 + 1;
+    /*  153 = 31+30+31+30+31 Tage fuer die 5 Monate von Maerz bis Juli
+        153 = 31+30+31+30+31 Tage fuer die 5 Monate von August bis Dezember
+              31+28          Tage fuer Januar und Februar (siehe unten)
+        +2: Justierung der Rundung
+        +1: Der erste Tag im Monat ist 1 (und nicht 0).
+    */
+
+    oMonth += 3; /* vom Jahr, das am 1. Maerz beginnt auf unser normales Jahr umrechnen: */
+    if (oMonth > 12)
+    {   /* Monate 13 und 14 entsprechen 1 (Januar) und 2 (Februar) des naechsten Jahres */
+        oMonth -= 12;
+        ++oYear;
+    }
+
+    oHour  = Sekunden_seit_Mitternacht / 3600;
+    oMinute  = Sekunden_seit_Mitternacht % 3600 / 60;
+    oSecond = Sekunden_seit_Mitternacht        % 60;
+}
 
 const char* TimeClk::getDateString( unsigned long theTime )
 {
-    static char timestr[12];
-    unsigned days = (theTime  % 86400L);
-    // Day 0 is 1.1.1970  Do
+    static char ds[15];
+    // DAY 0 is 1.1.1970  Do
     // print the hour, minute and second:
-    sprintf_P( timestr, PSTR("%2s:%5lu"), weekdays2str[day_of_week(theTime)], days);
+    sprintf_P( ds, PSTR("%2s %2d.%02d.%4d"), weekdays2str[day_of_week(theTime)], day(theTime), month(theTime), year(theTime) );
 
-    return timestr;
+    return ds;
 }
 
 const char* TimeClk::getTimeString( unsigned long theTime )
@@ -610,7 +657,7 @@ void uTimer::rearm(unsigned long i_interval ) {
      } else {
          //
          if ( m_cfg.everyday ) {
-             m_cfg.sw_time += 1 Day;
+             m_cfg.sw_time += 1 DAY;
          } else {
              ///@todo weekday ahead rearming
              // unsigned weekday = 0;
